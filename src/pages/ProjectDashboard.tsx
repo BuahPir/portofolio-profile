@@ -58,7 +58,7 @@ function CalendarIcon() {
 }
 
 /* ── Helpers ── */
-function formatDate(iso: string): string {
+function formatDate(iso: string | null): string {
   if (!iso) return ''
   return new Date(iso).toLocaleDateString('en-US', {
     month: 'short',
@@ -67,7 +67,7 @@ function formatDate(iso: string): string {
   })
 }
 
-function getDueStatus(dueDate: string): 'overdue' | 'upcoming' | 'none' {
+function getDueStatus(dueDate: string | null): 'overdue' | 'upcoming' | 'none' {
   if (!dueDate) return 'none'
   const now = new Date()
   now.setHours(0, 0, 0, 0)
@@ -80,7 +80,7 @@ function getDueStatus(dueDate: string): 'overdue' | 'upcoming' | 'none' {
 interface ModalProps {
   editingProject?: Project | null
   onClose: () => void
-  onSubmit: (data: Omit<Project, 'id' | 'createdAt'>) => void
+  onSubmit: (data: Omit<Project, 'id' | 'created_at'>) => void
 }
 
 function ProjectModal({ editingProject, onClose, onSubmit }: ModalProps) {

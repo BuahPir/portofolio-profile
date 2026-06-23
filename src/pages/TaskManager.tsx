@@ -29,7 +29,8 @@ const COLUMNS: ColumnDef[] = [
   { id: 'done', label: 'Done', dotClass: 'column-dot--done' },
 ]
 
-function formatDate(iso: string): string {
+function formatDate(iso: string | null): string {
+  if (!iso) return ''
   return new Date(iso).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -85,7 +86,7 @@ interface ModalProps {
   columnId: ColumnId
   projectId: string
   onClose: () => void
-  onSubmit: (data: Omit<Task, 'id' | 'createdAt'>) => void
+  onSubmit: (data: Omit<Task, 'id' | 'created_at'>) => void
 }
 
 function TaskModal({ editingTask, columnId, projectId, onClose, onSubmit }: ModalProps) {
