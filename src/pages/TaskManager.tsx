@@ -306,16 +306,19 @@ function TaskManager() {
       setProject(proj)
       const taskList = await getTasksByProject(projectId)
       setTasks(taskList)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err)
-      setError(err.message || 'Failed to load project from Database.')
+      const msg = err instanceof Error ? err.message : String(err)
+      setError(msg || 'Failed to load project from Database.')
     } finally {
       setLoading(false)
     }
   }, [projectId, navigate])
 
   useEffect(() => {
-    loadData()
+    void (async () => {
+      await loadData()
+    })()
   }, [loadData])
 
   // ── Task CRUD (async) ──

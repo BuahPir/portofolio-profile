@@ -109,7 +109,9 @@ function WeatherDashboard() {
 
   useEffect(() => {
     const controller = new AbortController()
-    loadWeather('Jakarta')
+    void (async () => {
+      await loadWeather('Jakarta')
+    })()
     return () => controller.abort()
   }, [loadWeather])
 

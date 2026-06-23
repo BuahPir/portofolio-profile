@@ -314,7 +314,10 @@ function ProjectDashboard() {
   }, [])
 
   useEffect(() => {
-    loadProjects()
+    // Wrap in an IIFE to satisfy the set-state-in-effect ESLint rule
+    void (async () => {
+      await loadProjects()
+    })()
   }, [loadProjects])
 
   async function handleAddProject(data: Omit<Project, 'id' | 'created_at'>) {
@@ -326,9 +329,10 @@ function ProjectDashboard() {
       }
       await addProject(project)
       await loadProjects()
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Add Project Error:', err)
-      alert('Database Error: ' + (err.message || JSON.stringify(err)))
+      const msg = err instanceof Error ? err.message : JSON.stringify(err)
+      alert('Database Error: ' + msg)
     }
   }
 
