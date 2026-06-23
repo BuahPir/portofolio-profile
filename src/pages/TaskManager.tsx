@@ -94,7 +94,7 @@ function TaskModal({ editingTask, columnId, projectId, onClose, onSubmit }: Moda
   const [description, setDescription] = useState(editingTask?.description ?? '')
   const [priority, setPriority] = useState<Priority>(editingTask?.priority ?? 'medium')
   const [link, setLink] = useState(editingTask?.link ?? '')
-  const [targetColumn, setTargetColumn] = useState<ColumnId>(editingTask?.columnId ?? columnId)
+  const [targetColumn, setTargetColumn] = useState<ColumnId>(editingTask?.column_id ?? columnId)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -105,12 +105,12 @@ function TaskModal({ editingTask, columnId, projectId, onClose, onSubmit }: Moda
     e.preventDefault()
     if (!title.trim()) return
     onSubmit({
-      projectId,
+      project_id: projectId,
       title: title.trim(),
-      description: description.trim(),
+      description: description.trim() || null,
       priority,
-      link: link.trim(),
-      columnId: targetColumn,
+      link: link.trim() || null,
+      column_id: targetColumn,
     })
     onClose()
   }
@@ -268,7 +268,7 @@ function TaskCard({ task, onDelete, onEdit, onDragStart, onDragEnd }: TaskCardPr
             {task.priority}
           </span>
         </div>
-        <span className="task-card-date">{formatDate(task.createdAt)}</span>
+        <span className="task-card-date">{formatDate(task.created_at)}</span>
       </div>
     </div>
   )
@@ -282,6 +282,7 @@ function TaskManager() {
   const [project, setProject] = useState<Project | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [modalColumn, setModalColumn] = useState<ColumnId | null>(null)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [dragOverColumn, setDragOverColumn] = useState<ColumnId | null>(null)
@@ -290,19 +291,26 @@ function TaskManager() {
   // Load project and tasks from IndexedDB
   const loadData = useCallback(async () => {
     if (!projectId) return
-    await initDB()
+    try {
+      setError(null)
+      await initDB()
 
-    const proj = await getProject(projectId)
-    if (!proj) {
-      // Project doesn't exist — go back to dashboard
-      navigate('/task_manager', { replace: true })
-      return
+      const proj = await getProject(projectId)
+      if (!proj) {
+        // Project doesn't exist — go back to dashboard
+        navigate('/task_manager', { replace: true })
+        return
+      }
+
+      setProject(proj)
+      const taskList = await getTasksByProject(projectId)
+      setTasks(taskList)
+    } catch (err: any) {
+      console.error(err)
+      setError(err.message || 'Failed to load project from Database.')
+    } finally {
+      setLoading(false)
     }
-
-    setProject(proj)
-    const taskList = await getTasksByProject(projectId)
-    setTasks(taskList)
-    setLoading(false)
   }, [projectId, navigate])
 
   useEffect(() => {
@@ -310,17 +318,17 @@ function TaskManager() {
   }, [loadData])
 
   // ── Task CRUD (async) ──
-  async function handleAddTask(data: Omit<Task, 'id' | 'createdAt'>) {
+  async function handleAddTask(data: Omit<Task, 'id' | 'created_at'>) {
     const newTask: Task = {
       ...data,
       id: generateId(),
-      createdAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
     }
     await dbAddTask(newTask)
     setTasks((prev) => [newTask, ...prev])
   }
 
-  async function handleUpdateTask(data: Omit<Task, 'id' | 'createdAt'>) {
+  async function handleUpdateTask(data: Omit<Task, 'id' | 'created_at'>) {
     if (!editingTask) return
     const updated: Task = { ...editingTask, ...data }
     await dbUpdateTask(updated)
@@ -334,7 +342,7 @@ function TaskManager() {
 
   function openEditModal(task: Task) {
     setEditingTask(task)
-    setModalColumn(task.columnId)
+    setModalColumn(task.column_id)
   }
 
   function closeModal() {
@@ -342,7 +350,7 @@ function TaskManager() {
     setEditingTask(null)
   }
 
-  function handleModalSubmit(data: Omit<Task, 'id' | 'createdAt'>) {
+  function handleModalSubmit(data: Omit<Task, 'id' | 'created_at'>) {
     if (editingTask) {
       handleUpdateTask(data)
     } else {
@@ -384,24 +392,24 @@ function TaskManager() {
     if (!taskId) return
 
     const task = tasks.find((t) => t.id === taskId)
-    if (!task || task.columnId === columnId) {
+    if (!task || task.column_id === columnId) {
       draggedTaskId.current = null
       return
     }
 
-    const updated = { ...task, columnId }
+    const updated = { ...task, column_id: columnId }
     await dbUpdateTask(updated)
     setTasks((prev) => prev.map((t) => (t.id === taskId ? updated : t)))
     draggedTaskId.current = null
   }
 
   /* ── Stats ── */
-  const todoCount = tasks.filter((t) => t.columnId === 'todo').length
-  const progressCount = tasks.filter((t) => t.columnId === 'progress').length
-  const doneCount = tasks.filter((t) => t.columnId === 'done').length
+  const todoCount = tasks.filter((t) => t.column_id === 'todo').length
+  const progressCount = tasks.filter((t) => t.column_id === 'progress').length
+  const doneCount = tasks.filter((t) => t.column_id === 'done').length
   const totalCount = tasks.length
 
-  if (loading) {
+  if (loading || error) {
     return (
       <div className="task-page">
         <header className="task-header">
@@ -411,7 +419,14 @@ function TaskManager() {
             </Link>
             <ThemeToggle />
           </div>
-          <h1>Loading...</h1>
+          {loading && <h1>Loading...</h1>}
+          {error && (
+            <div style={{ color: '#ef4444', marginTop: '20px' }}>
+              <h2>Database Error</h2>
+              <p>{error}</p>
+              <p style={{ fontSize: '13px' }}>Check browser console for more details.</p>
+            </div>
+          )}
         </header>
       </div>
     )
@@ -461,13 +476,13 @@ function TaskManager() {
       {/* Board */}
       <div className="task-board">
         {COLUMNS.map((col) => {
-          const columnTasks = tasks.filter((t) => t.columnId === col.id)
-          const isOver = dragOverColumn === col.id
+          const columnTasks = tasks.filter((t) => t.column_id === col.id)
+          const isDragOver = dragOverColumn === col.id
 
           return (
             <div
               key={col.id}
-              className={`task-column${isOver ? ' drag-over' : ''}`}
+              className={`task-column${isDragOver ? ' drag-over' : ''}`}
               onDragOver={(e) => handleDragOver(e, col.id)}
               onDragLeave={(e) => handleDragLeave(e, col.id)}
               onDrop={(e) => handleDrop(e, col.id)}
@@ -480,13 +495,13 @@ function TaskManager() {
                 </div>
               </div>
               <div className="column-body">
-                {columnTasks.length === 0 && !isOver && (
+                {columnTasks.length === 0 && !isDragOver && (
                   <div className="empty-state">
                     <ClipboardIcon />
                     <p>No tasks yet</p>
                   </div>
                 )}
-                {isOver && columnTasks.length === 0 && (
+                {isDragOver && columnTasks.length === 0 && (
                   <div className="drop-placeholder">Drop here</div>
                 )}
                 {columnTasks.map((task) => (

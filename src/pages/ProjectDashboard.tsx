@@ -87,7 +87,7 @@ function ProjectModal({ editingProject, onClose, onSubmit }: ModalProps) {
   const isEdit = !!editingProject
   const [name, setName] = useState(editingProject?.name ?? '')
   const [description, setDescription] = useState(editingProject?.description ?? '')
-  const [dueDate, setDueDate] = useState(editingProject?.dueDate ?? '')
+  const [dueDate, setDueDate] = useState(editingProject?.due_date ?? '')
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -99,8 +99,8 @@ function ProjectModal({ editingProject, onClose, onSubmit }: ModalProps) {
     if (!name.trim()) return
     onSubmit({
       name: name.trim(),
-      description: description.trim(),
-      dueDate,
+      description: description.trim() || null,
+      due_date: dueDate || null,
     })
     onClose()
   }
@@ -203,7 +203,7 @@ interface ProjectCardProps {
 
 function ProjectCard({ project, taskCounts, onEdit, onDelete }: ProjectCardProps) {
   const navigate = useNavigate()
-  const dueStatus = getDueStatus(project.dueDate)
+  const dueStatus = getDueStatus(project.due_date)
 
   function handleClick() {
     navigate(`/task_manager/${project.id}`)
@@ -260,10 +260,10 @@ function ProjectCard({ project, taskCounts, onEdit, onDelete }: ProjectCardProps
             {taskCounts.done}
           </span>
         </div>
-        {project.dueDate && (
+        {project.due_date && (
           <span className={`project-due project-due--${dueStatus}`}>
             <CalendarIcon />
-            {formatDate(project.dueDate)}
+            {formatDate(project.due_date)}
           </span>
         )}
       </div>
@@ -294,9 +294,9 @@ function ProjectDashboard() {
         return {
           project,
           counts: {
-            todo: tasks.filter((t: Task) => t.columnId === 'todo').length,
-            progress: tasks.filter((t: Task) => t.columnId === 'progress').length,
-            done: tasks.filter((t: Task) => t.columnId === 'done').length,
+            todo: tasks.filter((t: Task) => t.column_id === 'todo').length,
+            progress: tasks.filter((t: Task) => t.column_id === 'progress').length,
+            done: tasks.filter((t: Task) => t.column_id === 'done').length,
           },
         }
       }),
@@ -305,8 +305,8 @@ function ProjectDashboard() {
     // Sort: newest first
     withCounts.sort(
       (a, b) =>
-        new Date(b.project.createdAt).getTime() -
-        new Date(a.project.createdAt).getTime(),
+        new Date(b.project.created_at).getTime() -
+        new Date(a.project.created_at).getTime(),
     )
 
     setItems(withCounts)
@@ -317,17 +317,22 @@ function ProjectDashboard() {
     loadProjects()
   }, [loadProjects])
 
-  async function handleAddProject(data: Omit<Project, 'id' | 'createdAt'>) {
-    const project: Project = {
-      ...data,
-      id: generateId(),
-      createdAt: new Date().toISOString(),
+  async function handleAddProject(data: Omit<Project, 'id' | 'created_at'>) {
+    try {
+      const project: Project = {
+        ...data,
+        id: generateId(),
+        created_at: new Date().toISOString(),
+      }
+      await addProject(project)
+      await loadProjects()
+    } catch (err: any) {
+      console.error('Add Project Error:', err)
+      alert('Database Error: ' + (err.message || JSON.stringify(err)))
     }
-    await addProject(project)
-    await loadProjects()
   }
 
-  async function handleUpdateProject(data: Omit<Project, 'id' | 'createdAt'>) {
+  async function handleUpdateProject(data: Omit<Project, 'id' | 'created_at'>) {
     if (!editingProject) return
     await updateProject({ ...editingProject, ...data })
     setEditingProject(null)
