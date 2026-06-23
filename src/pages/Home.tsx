@@ -24,8 +24,8 @@ const projects = [
   {
     title: 'Task Manager',
     description:
-      'A drag-and-drop task board to organize daily work and track progress.',
-    tags: ['TypeScript', 'React', 'IndexedDB'],
+      'A multi-project drag-and-drop task board with a Supabase PostgreSQL backend.',
+    tags: ['TypeScript', 'React', 'Supabase'],
     link: '/task_manager',
   },
   {

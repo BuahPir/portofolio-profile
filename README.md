@@ -19,13 +19,14 @@ A personal portfolio website built with **React**, **TypeScript**, and **Vite**.
 - Weather condition descriptions from WMO codes
 
 ### 📋 Task Manager
+- **Project Dashboard** — manage multiple independent projects with descriptions and due dates
 - Kanban board with 3 columns: **To Do**, **In Progress**, **Done**
 - **Drag & drop** tasks between columns (HTML5 Drag and Drop API)
 - **Add / Edit / Delete** tasks with a modal form
 - **Link field** — attach URLs (e.g. Figma, GitHub) displayed as clickable badges
 - **Priority badges** — Low (green), Medium (amber), High (red)
 - **Stats bar** — live task counts across all columns
-- **LocalStorage persistence** — tasks survive page refreshes
+- **Supabase Backend** — tasks and projects are persisted to a live PostgreSQL database
 
 ### 🌙 Dark / Light Mode
 - Toggle available on every page (sun/moon pill button)
