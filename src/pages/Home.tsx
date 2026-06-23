@@ -25,7 +25,7 @@ const projects = [
     title: 'Task Manager',
     description:
       'A drag-and-drop task board to organize daily work and track progress.',
-    tags: ['TypeScript', 'React', 'Local Storage'],
+    tags: ['TypeScript', 'React', 'IndexedDB'],
     link: '/task_manager',
   },
   {

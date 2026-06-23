@@ -1,109 +1,39 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import ThemeToggle from '../components/ThemeToggle'
+import {
+  initDB,
+  getProject,
+  getTasksByProject,
+  addTask as dbAddTask,
+  updateTask as dbUpdateTask,
+  deleteTask as dbDeleteTask,
+  generateId,
+  type Task,
+  type Project,
+  type Priority,
+  type ColumnId,
+} from '../lib/db'
 import './TaskManager.css'
 
-/* ── Types ── */
-type Priority = 'low' | 'medium' | 'high'
-type ColumnId = 'todo' | 'progress' | 'done'
-
-interface Task {
-  id: string
-  title: string
-  description: string
-  priority: Priority
-  link: string
-  createdAt: string
-  columnId: ColumnId
-}
-
-interface Column {
+/* ── Column config ── */
+interface ColumnDef {
   id: ColumnId
   label: string
   dotClass: string
 }
 
-const COLUMNS: Column[] = [
+const COLUMNS: ColumnDef[] = [
   { id: 'todo', label: 'To Do', dotClass: 'column-dot--todo' },
   { id: 'progress', label: 'In Progress', dotClass: 'column-dot--progress' },
   { id: 'done', label: 'Done', dotClass: 'column-dot--done' },
 ]
-
-const STORAGE_KEY = 'task-manager-tasks'
-
-function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
-}
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
   })
-}
-
-function loadTasks(): Task[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as Task[]
-      // migrate old tasks without link field
-      return parsed.map((t) => ({ ...t, link: t.link ?? '' }))
-    }
-  } catch {
-    // ignore
-  }
-  return getDefaultTasks()
-}
-
-function saveTasks(tasks: Task[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks))
-}
-
-function getDefaultTasks(): Task[] {
-  const now = new Date().toISOString()
-  return [
-    {
-      id: generateId(),
-      title: 'Design landing page',
-      description:
-        'Create wireframes and high-fidelity mockups for the new landing page.',
-      priority: 'high',
-      link: 'https://www.figma.com',
-      createdAt: now,
-      columnId: 'todo',
-    },
-    {
-      id: generateId(),
-      title: 'Set up project repo',
-      description:
-        'Initialize Git repository with CI/CD pipeline and branch protection rules.',
-      priority: 'medium',
-      link: 'https://github.com',
-      createdAt: now,
-      columnId: 'todo',
-    },
-    {
-      id: generateId(),
-      title: 'Build navigation component',
-      description:
-        'Create responsive nav bar with mobile hamburger menu and smooth transitions.',
-      priority: 'medium',
-      link: '',
-      createdAt: now,
-      columnId: 'progress',
-    },
-    {
-      id: generateId(),
-      title: 'Write API documentation',
-      description:
-        'Document all REST endpoints with request/response examples.',
-      priority: 'low',
-      link: '',
-      createdAt: now,
-      columnId: 'done',
-    },
-  ]
 }
 
 /* ── Icons ── */
@@ -153,11 +83,12 @@ function ClipboardIcon() {
 interface ModalProps {
   editingTask?: Task | null
   columnId: ColumnId
+  projectId: string
   onClose: () => void
   onSubmit: (data: Omit<Task, 'id' | 'createdAt'>) => void
 }
 
-function TaskModal({ editingTask, columnId, onClose, onSubmit }: ModalProps) {
+function TaskModal({ editingTask, columnId, projectId, onClose, onSubmit }: ModalProps) {
   const isEdit = !!editingTask
   const [title, setTitle] = useState(editingTask?.title ?? '')
   const [description, setDescription] = useState(editingTask?.description ?? '')
@@ -174,6 +105,7 @@ function TaskModal({ editingTask, columnId, onClose, onSubmit }: ModalProps) {
     e.preventDefault()
     if (!title.trim()) return
     onSubmit({
+      projectId,
       title: title.trim(),
       description: description.trim(),
       priority,
@@ -324,6 +256,7 @@ function TaskCard({ task, onDelete, onEdit, onDragStart, onDragEnd }: TaskCardPr
           target="_blank"
           rel="noreferrer"
           className="task-card-link"
+          onClick={(e) => e.stopPropagation()}
         >
           <LinkIcon />
           <span>{task.link.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}</span>
@@ -343,41 +276,61 @@ function TaskCard({ task, onDelete, onEdit, onDragStart, onDragEnd }: TaskCardPr
 
 /* ── Main Component ── */
 function TaskManager() {
-  const [tasks, setTasks] = useState<Task[]>(loadTasks)
+  const { projectId } = useParams<{ projectId: string }>()
+  const navigate = useNavigate()
+
+  const [project, setProject] = useState<Project | null>(null)
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [loading, setLoading] = useState(true)
   const [modalColumn, setModalColumn] = useState<ColumnId | null>(null)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [dragOverColumn, setDragOverColumn] = useState<ColumnId | null>(null)
   const draggedTaskId = useRef<string | null>(null)
 
-  // persist
-  useEffect(() => {
-    saveTasks(tasks)
-  }, [tasks])
+  // Load project and tasks from IndexedDB
+  const loadData = useCallback(async () => {
+    if (!projectId) return
+    await initDB()
 
-  const addTask = useCallback((data: Omit<Task, 'id' | 'createdAt'>) => {
+    const proj = await getProject(projectId)
+    if (!proj) {
+      // Project doesn't exist — go back to dashboard
+      navigate('/task_manager', { replace: true })
+      return
+    }
+
+    setProject(proj)
+    const taskList = await getTasksByProject(projectId)
+    setTasks(taskList)
+    setLoading(false)
+  }, [projectId, navigate])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+
+  // ── Task CRUD (async) ──
+  async function handleAddTask(data: Omit<Task, 'id' | 'createdAt'>) {
     const newTask: Task = {
       ...data,
       id: generateId(),
       createdAt: new Date().toISOString(),
     }
+    await dbAddTask(newTask)
     setTasks((prev) => [newTask, ...prev])
-  }, [])
+  }
 
-  const updateTask = useCallback(
-    (data: Omit<Task, 'id' | 'createdAt'>) => {
-      if (!editingTask) return
-      setTasks((prev) =>
-        prev.map((t) =>
-          t.id === editingTask.id ? { ...t, ...data } : t,
-        ),
-      )
-    },
-    [editingTask],
-  )
+  async function handleUpdateTask(data: Omit<Task, 'id' | 'createdAt'>) {
+    if (!editingTask) return
+    const updated: Task = { ...editingTask, ...data }
+    await dbUpdateTask(updated)
+    setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
+  }
 
-  const deleteTask = useCallback((id: string) => {
+  async function handleDeleteTask(id: string) {
+    await dbDeleteTask(id)
     setTasks((prev) => prev.filter((t) => t.id !== id))
-  }, [])
+  }
 
   function openEditModal(task: Task) {
     setEditingTask(task)
@@ -391,9 +344,9 @@ function TaskManager() {
 
   function handleModalSubmit(data: Omit<Task, 'id' | 'createdAt'>) {
     if (editingTask) {
-      updateTask(data)
+      handleUpdateTask(data)
     } else {
-      addTask(data)
+      handleAddTask(data)
     }
   }
 
@@ -423,16 +376,22 @@ function TaskManager() {
     }
   }
 
-  function handleDrop(e: React.DragEvent, columnId: ColumnId) {
+  async function handleDrop(e: React.DragEvent, columnId: ColumnId) {
     e.preventDefault()
     setDragOverColumn(null)
 
     const taskId = draggedTaskId.current
     if (!taskId) return
 
-    setTasks((prev) =>
-      prev.map((t) => (t.id === taskId ? { ...t, columnId } : t)),
-    )
+    const task = tasks.find((t) => t.id === taskId)
+    if (!task || task.columnId === columnId) {
+      draggedTaskId.current = null
+      return
+    }
+
+    const updated = { ...task, columnId }
+    await dbUpdateTask(updated)
+    setTasks((prev) => prev.map((t) => (t.id === taskId ? updated : t)))
     draggedTaskId.current = null
   }
 
@@ -442,17 +401,33 @@ function TaskManager() {
   const doneCount = tasks.filter((t) => t.columnId === 'done').length
   const totalCount = tasks.length
 
+  if (loading) {
+    return (
+      <div className="task-page">
+        <header className="task-header">
+          <div className="task-header-top">
+            <Link to="/task_manager" className="back-link">
+              &larr; Back to Projects
+            </Link>
+            <ThemeToggle />
+          </div>
+          <h1>Loading...</h1>
+        </header>
+      </div>
+    )
+  }
+
   return (
     <div className="task-page">
       <header className="task-header">
         <div className="task-header-top">
-          <Link to="/" className="back-link">
-            &larr; Back to Portfolio
+          <Link to="/task_manager" className="back-link">
+            &larr; Back to Projects
           </Link>
           <ThemeToggle />
         </div>
         <div className="task-header-row">
-          <h1>Task Manager</h1>
+          <h1>{project?.name ?? 'Task Manager'}</h1>
           <button
             className="header-add-btn"
             onClick={() => setModalColumn('todo')}
@@ -462,10 +437,9 @@ function TaskManager() {
             <span>New Task</span>
           </button>
         </div>
-        <p className="task-intro">
-          Drag and drop tasks between columns to track your progress. Data is
-          saved in your browser.
-        </p>
+        {project?.description && (
+          <p className="task-intro">{project.description}</p>
+        )}
       </header>
 
       {/* Stats */}
@@ -519,7 +493,7 @@ function TaskManager() {
                   <TaskCard
                     key={task.id}
                     task={task}
-                    onDelete={deleteTask}
+                    onDelete={handleDeleteTask}
                     onEdit={openEditModal}
                     onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
@@ -540,10 +514,11 @@ function TaskManager() {
       </div>
 
       {/* Modal */}
-      {modalColumn !== null && (
+      {modalColumn !== null && projectId && (
         <TaskModal
           editingTask={editingTask}
           columnId={modalColumn}
+          projectId={projectId}
           onClose={closeModal}
           onSubmit={handleModalSubmit}
         />
