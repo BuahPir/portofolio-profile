@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import ThemeToggle from '../components/ThemeToggle'
 import './WeatherDashboard.css'
 
 interface WeatherData {
@@ -81,7 +82,7 @@ async function fetchWeather(cityName: string): Promise<WeatherData> {
 
 function WeatherDashboard() {
   const [query, setQuery] = useState('Jakarta')
-  const [weather, setWeather] = useState<WeatherData | null>(null)
+  const [weather, setWeather] = useState<WeatherData | null>(() => null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -107,7 +108,9 @@ function WeatherDashboard() {
   }, [])
 
   useEffect(() => {
+    const controller = new AbortController()
     loadWeather('Jakarta')
+    return () => controller.abort()
   }, [loadWeather])
 
   function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
@@ -118,9 +121,12 @@ function WeatherDashboard() {
   return (
     <div className="weather-page">
       <header className="weather-header">
-        <Link to="/" className="back-link">
-          &larr; Back to Portfolio
-        </Link>
+        <div className="weather-header-top">
+          <Link to="/" className="back-link">
+            &larr; Back to Portfolio
+          </Link>
+          <ThemeToggle />
+        </div>
         <h1>Weather Dashboard</h1>
       </header>
 

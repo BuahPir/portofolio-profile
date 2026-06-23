@@ -9,9 +9,15 @@
   border-bottom: 1px solid var(--border);
 }
 
+.weather-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
 .back-link {
   display: inline-block;
-  margin-bottom: 12px;
   color: var(--text);
   text-decoration: none;
   font-size: 15px;

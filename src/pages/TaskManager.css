@@ -1,0 +1,599 @@
+/* ── Layout ── */
+.task-page {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+.task-header {
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--border);
+}
+
+.task-header h1 {
+  margin: 0;
+  font-size: 32px;
+  letter-spacing: -0.5px;
+}
+
+.task-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.task-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.task-intro {
+  margin-top: 8px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* ── Back Link ── */
+.back-link {
+  display: inline-block;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 15px;
+  transition: color 0.2s;
+}
+
+.back-link:hover {
+  color: var(--accent);
+}
+
+/* ── Board ── */
+.task-board {
+  flex: 1;
+  display: flex;
+  gap: 16px;
+  padding: 24px 20px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Column ── */
+.task-column {
+  flex: 1;
+  min-width: 260px;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.task-column.drag-over {
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow);
+}
+
+/* column header */
+.column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.column-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.column-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.column-dot--todo {
+  background: #6366f1;
+}
+
+.column-dot--progress {
+  background: #f59e0b;
+}
+
+.column-dot--done {
+  background: #22c55e;
+}
+
+.column-title {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-h);
+}
+
+.column-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--code-bg);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+/* column body */
+.column-body {
+  flex: 1;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 120px;
+}
+
+/* drop placeholder */
+.drop-placeholder {
+  border: 2px dashed var(--accent-border);
+  border-radius: 10px;
+  padding: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.drag-over .drop-placeholder {
+  opacity: 1;
+}
+
+/* ── Task Card ── */
+.task-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  background: var(--bg);
+  cursor: grab;
+  transition: box-shadow 0.2s, border-color 0.2s, opacity 0.2s, transform 0.15s;
+  user-select: none;
+  position: relative;
+}
+
+.task-card:hover {
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow);
+}
+
+.task-card:active {
+  cursor: grabbing;
+}
+
+.task-card.dragging {
+  opacity: 0.35;
+  transform: scale(0.97);
+}
+
+.task-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.task-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin: 0;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.task-card-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.task-card-desc {
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Task Card Link ── */
+.task-card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--accent);
+  text-decoration: none;
+  margin-bottom: 10px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: var(--accent-bg);
+  border: 1px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.task-card-link:hover {
+  border-color: var(--accent-border);
+  text-decoration: underline;
+}
+
+.task-card-link svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.task-card-link span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.task-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* priority badge */
+.priority-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.priority-badge--low {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.priority-badge--medium {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.priority-badge--high {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.task-card-date {
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.7;
+}
+
+/* action buttons (edit & delete) */
+.task-action-btn {
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+}
+
+.task-card:hover .task-action-btn {
+  opacity: 1;
+}
+
+.task-action-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.task-edit-btn:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.task-delete-btn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* ── Add Task Button ── */
+.add-task-btn {
+  width: 100%;
+  padding: 10px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.add-task-btn:hover {
+  border-color: var(--accent-border);
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.add-task-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── Add Button in header ── */
+.header-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  border: 2px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+  text-decoration: none;
+}
+
+.header-add-btn:hover {
+  box-shadow: var(--shadow);
+}
+
+.header-add-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── Modal Overlay ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: var(--shadow);
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal h2 {
+  margin: 0 0 20px;
+  font-size: 22px;
+  letter-spacing: -0.3px;
+}
+
+/* ── Form ── */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  background: var(--bg);
+  color: var(--text-h);
+  box-sizing: border-box;
+  transition: border-color 0.2s, outline-color 0.2s;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 72px;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: 2px solid var(--accent-border);
+  border-color: var(--accent);
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.btn-cancel {
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  border: 2px solid var(--border);
+  background: transparent;
+  color: var(--text-h);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.btn-cancel:hover {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.btn-submit {
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  border: 2px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+
+.btn-submit:hover {
+  box-shadow: var(--shadow);
+}
+
+/* ── Stats Bar ── */
+.task-stats {
+  display: flex;
+  gap: 20px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text);
+  flex-wrap: wrap;
+}
+
+.task-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.task-stat strong {
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+/* ── Empty State ── */
+.empty-state {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text);
+  font-size: 14px;
+  opacity: 0.6;
+}
+
+.empty-state svg {
+  width: 36px;
+  height: 36px;
+  margin-bottom: 8px;
+  opacity: 0.4;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .task-header {
+    padding: 16px 20px;
+  }
+
+  .task-header h1 {
+    font-size: 24px;
+  }
+
+  .task-board {
+    padding: 16px 12px;
+    gap: 12px;
+  }
+
+  .task-column {
+    min-width: 240px;
+  }
+
+  .modal {
+    padding: 20px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .header-add-btn span {
+    display: none;
+  }
+
+  /* always show action buttons on mobile (no hover) */
+  .task-action-btn {
+    opacity: 1;
+  }
+}

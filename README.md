@@ -1,73 +1,93 @@
-# React + TypeScript + Vite
+# Ahmad Nadil — Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A personal portfolio website built with **React**, **TypeScript**, and **Vite**. Features a clean, responsive design with dark/light mode support.
 
-Currently, two official plugins are available:
+## 🚀 Live Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### 🏠 Home / Portfolio
+- Hero section with introduction and call-to-action
+- About Me section with avatar
+- Skills showcase with tag badges
+- Project cards with links to live demos
+- Contact section with social links (GitHub, LinkedIn, X)
+- Sticky navigation header
 
-## React Compiler
+### 🌦️ Weather Dashboard
+- Live weather data from [Open-Meteo API](https://open-meteo.com/)
+- City search with geocoding
+- Displays temperature, humidity, wind speed, and "feels like"
+- Weather condition descriptions from WMO codes
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 📋 Task Manager
+- Kanban board with 3 columns: **To Do**, **In Progress**, **Done**
+- **Drag & drop** tasks between columns (HTML5 Drag and Drop API)
+- **Add / Edit / Delete** tasks with a modal form
+- **Link field** — attach URLs (e.g. Figma, GitHub) displayed as clickable badges
+- **Priority badges** — Low (green), Medium (amber), High (red)
+- **Stats bar** — live task counts across all columns
+- **LocalStorage persistence** — tasks survive page refreshes
 
-## Expanding the ESLint configuration
+### 🌙 Dark / Light Mode
+- Toggle available on every page (sun/moon pill button)
+- Respects system preference on first visit
+- Persists choice in `localStorage`
+- No flash of wrong theme on load (inline init script)
+- Social icons adapt color via `currentColor`
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🛠️ Tech Stack
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+| Technology | Usage |
+|---|---|
+| [React 19](https://react.dev/) | UI framework |
+| [TypeScript](https://www.typescriptlang.org/) | Type safety |
+| [Vite](https://vite.dev/) | Build tool & dev server |
+| [React Router](https://reactrouter.com/) | Client-side routing |
+| CSS Custom Properties | Theming & design tokens |
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 📁 Project Structure
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+src/
+├── components/
+│   ├── ThemeToggle.tsx       # Dark/light mode toggle
+│   └── ThemeToggle.css
+├── pages/
+│   ├── Home.tsx              # Portfolio landing page
+│   ├── WeatherDashboard.tsx  # Weather app
+│   ├── WeatherDashboard.css
+│   ├── TaskManager.tsx       # Kanban task board
+│   └── TaskManager.css
+├── assets/                   # SVG icons & images
+├── App.tsx                   # Router setup
+├── App.css                   # Portfolio page styles
+├── index.css                 # Global styles & theme tokens
+└── main.tsx                  # Entry point
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🏁 Getting Started
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+# Install dependencies
+npm install
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Start dev server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
 ```
+
+## 📝 Routes
+
+| Route | Page |
+|---|---|
+| `/` | Portfolio home |
+| `/weather_dashboard` | Weather Dashboard |
+| `/task_manager` | Task Manager |
+
+## 📄 License
+
+This project is for personal/educational use.
