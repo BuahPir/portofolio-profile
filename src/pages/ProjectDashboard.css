@@ -197,6 +197,7 @@
 .project-due svg {
   width: 13px;
   height: 13px;
+  color: var(--text);
 }
 
 .project-due--upcoming {
